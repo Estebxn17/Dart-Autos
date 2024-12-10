@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter_autos/views/register.dart';
 import 'package:flutter_autos/views/gestion.dart';
 
@@ -7,13 +9,52 @@ class LoginScreen extends StatelessWidget {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _login(BuildContext context) {
+  Future<void> _login(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => VehicleRentalScreen()),
-      );
+      final url = Uri.parse('http://localhost:5000/api/personas/login'); // Cambia a tu URL
+      try {
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'correo': _emailController.text.trim(),
+            'contraseña': _passwordController.text.trim(),
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          // Inicio de sesión exitoso
+          final responseData = jsonDecode(response.body);
+          print('Inicio de sesión exitoso: ${responseData['message']}');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => VehicleRentalScreen()),
+          );
+        } else {
+          // Error al iniciar sesión
+          final responseData = jsonDecode(response.body);
+          _showErrorDialog(context, responseData['error'] ?? 'Error desconocido');
+        }
+      } catch (e) {
+        _showErrorDialog(context, 'No se pudo conectar con el servidor. Inténtalo de nuevo.');
+      }
     }
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -33,7 +74,10 @@ class LoginScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.person, size: 80, color: Colors.redAccent),
                   SizedBox(height: 20),
-                  Text('Bienvenido', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+                  Text(
+                    'Bienvenido',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.redAccent),
+                  ),
                   SizedBox(height: 20),
                   TextFormField(
                     controller: _emailController,
@@ -84,7 +128,10 @@ class LoginScreen extends StatelessWidget {
                             MaterialPageRoute(builder: (context) => RegisterScreen()),
                           );
                         },
-                        child: Text('Regístrate', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          'Regístrate',
+                          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ],
                   ),
