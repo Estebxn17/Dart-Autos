@@ -11,7 +11,7 @@ class LoginScreen extends StatelessWidget {
 
   Future<void> _login(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      final url = Uri.parse('http://localhost:5000/api/personas/login'); // Cambia a tu URL
+      final url = Uri.parse('http://localhost:5000/api/personas/login');
       try {
         final response = await http.post(
           url,
@@ -23,20 +23,29 @@ class LoginScreen extends StatelessWidget {
         );
 
         if (response.statusCode == 200) {
-          // Inicio de sesión exitoso
           final responseData = jsonDecode(response.body);
+          final token = responseData['token']; 
+
+          if (token == null) {
+            _showErrorDialog(
+                context, "Error: No se recibió un token de autenticación.");
+            return;
+          }
+
           print('Inicio de sesión exitoso: ${responseData['message']}');
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => VehicleRentalScreen()),
+            MaterialPageRoute(
+                builder: (context) => VehicleRentalScreen(token: token)),
           );
         } else {
-          // Error al iniciar sesión
           final responseData = jsonDecode(response.body);
-          _showErrorDialog(context, responseData['error'] ?? 'Error desconocido');
+          _showErrorDialog(
+              context, responseData['error'] ?? 'Error desconocido');
         }
       } catch (e) {
-        _showErrorDialog(context, 'No se pudo conectar con el servidor. Inténtalo de nuevo.');
+        _showErrorDialog(context,
+            'No se pudo conectar con el servidor. Inténtalo de nuevo.');
       }
     }
   }
@@ -66,7 +75,8 @@ class LoginScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Container(
             padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(border: Border.all(color: Colors.redAccent)),
+            decoration:
+                BoxDecoration(border: Border.all(color: Colors.redAccent)),
             child: Form(
               key: _formKey,
               child: Column(
@@ -76,7 +86,10 @@ class LoginScreen extends StatelessWidget {
                   SizedBox(height: 20),
                   Text(
                     'Bienvenido',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.redAccent),
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.redAccent),
                   ),
                   SizedBox(height: 20),
                   TextFormField(
@@ -87,8 +100,10 @@ class LoginScreen extends StatelessWidget {
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Por favor ingrese su correo';
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) return 'Ingrese un correo válido';
+                      if (value == null || value.isEmpty)
+                        return 'Por favor ingrese su correo';
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value))
+                        return 'Ingrese un correo válido';
                       return null;
                     },
                   ),
@@ -102,7 +117,8 @@ class LoginScreen extends StatelessWidget {
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Por favor ingrese su contraseña';
+                      if (value == null || value.isEmpty)
+                        return 'Por favor ingrese su contraseña';
                       return null;
                     },
                   ),
@@ -110,30 +126,27 @@ class LoginScreen extends StatelessWidget {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
                       minimumSize: Size(double.infinity, 50),
                     ),
                     onPressed: () => _login(context),
-                    child: Text('Iniciar sesión', style: TextStyle(fontSize: 18)),
+                    child:
+                        Text('Iniciar sesión', style: TextStyle(fontSize: 18)),
                   ),
-                  SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('¿No tienes una cuenta? '),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => RegisterScreen()),
-                          );
-                        },
-                        child: Text(
-                          'Regístrate',
-                          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                  SizedBox(height: 10),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => RegisterScreen()),
+                      );
+                    },
+                    child: Text(
+                      "¿No tienes cuenta? Regístrate aquí",
+                      style: TextStyle(color: Colors.redAccent),
+                    ),
                   ),
                 ],
               ),
